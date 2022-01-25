@@ -1,3 +1,9 @@
-## 1.0.0
+## 0.1.0
 
-- Initial version.
+- canUseUsb
+- getDevices/requestDevice
+- open/close
+- reset
+- selectConfiguration
+- claimInterface/releaseInterface
+- transferIn/transferOut
