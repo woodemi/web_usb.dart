@@ -1,4 +1,4 @@
-Dart wrapper via `dart:js` for https://wicg.github.io/webhid/
+Dart wrapper via `dart:js` for https://wicg.github.io/webusb/
 
 ## Features
 
