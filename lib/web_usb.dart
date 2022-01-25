@@ -3,6 +3,7 @@ library web_usb;
 
 import 'dart:html' show EventTarget;
 import 'dart:js_util' show promiseToFuture;
+import 'dart:typed_data';
 
 import 'package:js/js.dart';
 

@@ -1,7 +1,9 @@
 // ignore_for_file: avoid_print, avoid_web_libraries_in_flutter
 
+import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:web_usb/web_usb.dart';
 import 'package:collection/collection.dart';
@@ -12,6 +14,29 @@ final ledgerDeviceIds = RequestOptionsFilter(
 
 const configurationValue = 1;
 const endpointNumber = 3;
+
+Uint8List transport(
+  int cla,
+  int ins,
+  int p1,
+  int p2, [
+  Uint8List? data,
+]) {
+  data ??= Uint8List.fromList([]);
+  return Uint8List.fromList([cla, ins, p1, p2, data.length, ...data]);
+}
+
+final getAppAndVersion = transport(0xb0, 0x01, 0x00, 0x00);
+
+String parseAppAndVersion(Uint8List data) {
+  var readBuffer = ReadBuffer(data.buffer.asByteData());
+  assert(readBuffer.getUint8() == 1);
+  var nameLength = readBuffer.getUint8();
+  var name = String.fromCharCodes(readBuffer.getUint8List(nameLength));
+  var versionLength = readBuffer.getUint8();
+  var version = String.fromCharCodes(readBuffer.getUint8List(versionLength));
+  return '$name, $version';
+}
 
 class LedgerNanoSPage extends StatefulWidget {
   const LedgerNanoSPage({Key? key}) : super(key: key);
@@ -41,6 +66,7 @@ class _LedgerNanoSState extends State<LedgerNanoSPage> {
             _buildReset(),
             _buildGetSelectConfiguration(),
             _buildGetClaimInterface(),
+            _buildTransferInOut(),
           ],
         ),
       ),
@@ -180,4 +206,70 @@ class _LedgerNanoSState extends State<LedgerNanoSPage> {
       ],
     );
   }
+
+  Widget _buildTransferInOut() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ElevatedButton(
+          child: const Text('device.transferIn'),
+          onPressed: () async {
+            var usbInTransferResult = await _device!.transferIn(endpointNumber, packetSize);
+            print('usbInTransferResult ${usbInTransferResult.data.lengthInBytes}');
+            var data = parseBlock(usbInTransferResult.data);
+            var response = parseAppAndVersion(data);
+            print(response);
+          },
+        ),
+        ElevatedButton(
+          child: const Text('device.transferOut'),
+          onPressed: () async {
+            var usbOutTransferResult = await _device?.transferOut(endpointNumber, makeBlock(getAppAndVersion));
+            print('usbOutTransferResult ${usbOutTransferResult?.bytesWritten}');
+          },
+        ),
+      ],
+    );
+  }
+}
+
+const packetSize = 64;
+final channel = Random().nextInt(0xffff);
+const Tag = 0x05;
+
+/// 
+/// +---------+--------+------------+-----------+
+/// | channel |  Tag   | blockSeqId | blockData |
+/// +---------+--------+------------+-----------+
+/// | 2 bytes | 1 byte | 2 bytes    |       ... |
+/// +---------+--------+------------+-----------+
+Uint8List makeBlock(Uint8List apdu) {
+  // TODO Multiple blocks
+
+  var apduBuffer = WriteBuffer();
+  apduBuffer.putUint16(apdu.length, endian: Endian.big);
+  apduBuffer.putUint8List(apdu);
+  var blockSize = packetSize - 5;
+  var paddingLength = blockSize - apdu.length - 2;
+  apduBuffer.putUint8List(Uint8List.fromList(List.filled(paddingLength, 0)));
+  var apduData = apduBuffer.done();
+
+  var writeBuffer = WriteBuffer();
+  writeBuffer.putUint16(channel, endian: Endian.big);
+  writeBuffer.putUint8(Tag);
+  writeBuffer.putUint16(0, endian: Endian.big);
+  writeBuffer.putUint8List(apduData.buffer.asUint8List());
+  return writeBuffer.done().buffer.asUint8List();
+}
+
+Uint8List parseBlock(ByteData block) {
+  var readBuffer = ReadBuffer(block);
+  assert(readBuffer.getUint16(endian: Endian.big) == channel);
+  assert(readBuffer.getUint8() == Tag);
+  assert(readBuffer.getUint16(endian: Endian.big) == 0);
+
+  var dataLength = readBuffer.getUint16(endian: Endian.big);
+  var data = readBuffer.getUint8List(dataLength);
+
+  return Uint8List.fromList(data);
 }

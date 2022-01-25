@@ -75,6 +75,16 @@ class UsbDevice extends Delegate<Object> {
     var promise = callMethod('releaseInterface', [interfaceNumber]);
     return promiseToFuture(promise);
   }
+
+  Future<UsbInTransferResult> transferIn(int endpointNumber, int length) {
+    var promise = callMethod('transferIn', [endpointNumber, length]);
+    return promiseToFuture(promise).then((value) => UsbInTransferResult._(value));
+  }
+
+  Future<UsbOutTransferResult> transferOut(int endpointNumber, TypedData data) {
+    var promise = callMethod('transferOut', [endpointNumber, data]);
+    return promiseToFuture(promise).then((value) => UsbOutTransferResult._(value));
+  }
 }
 
 class UsbConfiguration extends Delegate<Object> {
@@ -103,4 +113,16 @@ class UsbAlternateInterface extends Delegate<Object> {
   UsbAlternateInterface._(Object delegate) : super(delegate);
 
   int get interfaceClass => getProperty('interfaceClass');
+}
+
+class UsbInTransferResult extends Delegate<Object> {
+  UsbInTransferResult._(Object delegate) : super(delegate);
+
+  ByteData get data => getProperty('data');
+}
+
+class UsbOutTransferResult extends Delegate<Object> {
+  UsbOutTransferResult._(Object delegate) : super(delegate);
+
+  int get bytesWritten => getProperty('bytesWritten');
 }
