@@ -49,4 +49,58 @@ class UsbDevice extends Delegate<Object> {
     var promise = callMethod('close');
     return promiseToFuture(promise);
   }
+
+  Future<void> reset() {
+    var promise = callMethod('reset');
+    return promiseToFuture(promise);
+  }
+
+  UsbConfiguration? get configuration {
+    var property = getProperty('configuration');
+    if (property == null) return null;
+    return UsbConfiguration._(property);
+  }
+
+  Future<void> selectConfiguration(int configurationValue) {
+    var promise = callMethod('selectConfiguration', [configurationValue]);
+    return promiseToFuture(promise);
+  }
+
+  Future<void> claimInterface(int interfaceNumber) {
+    var promise = callMethod('claimInterface', [interfaceNumber]);
+    return promiseToFuture(promise);
+  }
+
+  Future<void> releaseInterface(int interfaceNumber) {
+    var promise = callMethod('releaseInterface', [interfaceNumber]);
+    return promiseToFuture(promise);
+  }
+}
+
+class UsbConfiguration extends Delegate<Object> {
+  UsbConfiguration._(Object delegate) : super(delegate);
+
+  List<UsbInterface> get interfaces {
+    var property = getProperty('interfaces');
+    if (property == null) return [];
+    return (property as List).map((e) => UsbInterface._(e)).toList();
+  }
+}
+
+class UsbInterface extends Delegate<Object> {
+  UsbInterface._(Object delegate) : super(delegate);
+
+  int get interfaceNumber => getProperty('interfaceNumber');
+
+  List<UsbAlternateInterface> get alternates {
+    var property = getProperty('alternates');
+    if (property == null) return [];
+    return (property as List).map((e) => UsbAlternateInterface._(e)).toList();
+  }
+}
+
+class UsbAlternateInterface extends Delegate<Object> {
+  UsbAlternateInterface._(Object delegate) : super(delegate);
+
+  int get interfaceClass => getProperty('interfaceClass');
 }
