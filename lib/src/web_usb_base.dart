@@ -1,7 +1,7 @@
 part of '../web_usb.dart';
 
-class Usb extends Delegate<Object> {
-  Usb._(delegate) : super(delegate);
+class Usb extends Delegate<EventTarget> {
+  Usb._(EventTarget delegate) : super(delegate);
 
   Future<UsbDevice> requestDevice([RequestOptions? options]) {
     var promise = callMethod('requestDevice', [options ?? RequestOptions(filters: [])]);
@@ -13,6 +13,26 @@ class Usb extends Delegate<Object> {
     return promiseToFuture(promise).then((value) {
       return (value as List).map((e) => UsbDevice._(e)).toList();
     });
+  }
+
+  /// FIXME allowInterop
+  void subscribeConnect(EventListener listener) {
+    delegate.addEventListener('connect', listener);
+  }
+
+  /// FIXME allowInterop
+  void unsubscribeConnect(EventListener listener) {
+    delegate.removeEventListener('connect', listener);
+  }
+
+  /// FIXME allowInterop
+  void subscribeDisconnect(EventListener listener) {
+    delegate.addEventListener('disconnect', listener);
+  }
+
+  /// FIXME allowInterop
+  void unsubscribeDisconnect(EventListener listener) {
+    delegate.removeEventListener('disconnect', listener);
   }
 }
 

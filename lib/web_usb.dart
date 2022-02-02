@@ -1,7 +1,7 @@
 @JS()
 library web_usb;
 
-import 'dart:html' show EventTarget;
+import 'dart:html' show EventListener, EventTarget;
 import 'dart:js_util' show promiseToFuture;
 import 'dart:typed_data';
 
@@ -19,7 +19,7 @@ bool canUseUsb() => _usb != null;
 Usb? _instance;
 Usb get usb {
   if (_usb != null) {
-    return _instance ??= Usb._(_usb);
+    return _instance ??= Usb._(_usb!);
   }
   throw 'navigator.usb unavailable';
 }
