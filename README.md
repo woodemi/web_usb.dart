@@ -4,6 +4,8 @@ Dart wrapper via `dart:js` for https://wicg.github.io/webusb/
 
 - canUseUsb
 - getDevices/requestDevice
+- subscribeConnect/unsubscribeConnect
+- subscribeDisconnect/unsubscribeDisconnect
 - open/close
 - reset
 - selectConfiguration
@@ -35,6 +37,30 @@ UsbDevice requestDevice = await usb.requestDevice(RequestOptions(
   filters: [ledgerDeviceIds],
 ));
 _device = requestDevice;
+```
+
+### subscribeConnect/unsubscribeConnect
+
+https://developer.mozilla.org/en-US/docs/Web/API/usb/onconnect
+
+```dart
+final EventListener _handleConnect = allowInterop((Event event) {}
+...
+usb.subscribeConnect(_handleConnect);
+...
+usb.unsubscribeConnect(_handleConnect);
+```
+
+### subscribeDisconnect/unsubscribeDisconnect
+
+https://developer.mozilla.org/en-US/docs/Web/API/usb/ondisconnect
+
+```dart
+final EventListener _handleDisconnect = allowInterop((Event event) {}
+...
+usb.subscribeDisconnect(_handleDisconnect);
+...
+usb.unsubscribeDisconnect(_handleDisconnect);
 ```
 
 ### open/close
@@ -76,6 +102,8 @@ _device?.reset().then((value) {
 https://developer.mozilla.org/en-US/docs/Web/API/USBDevice/selectConfiguration
 
 ```dart
+await _device?.selectConfiguration(configurationValue);
+_configuration = _device?.configuration;
 ```
 
 ### claimInterface/releaseInterface
