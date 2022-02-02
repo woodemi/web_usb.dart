@@ -30,7 +30,9 @@ final getAppAndVersion = transport(0xb0, 0x01, 0x00, 0x00);
 
 String parseAppAndVersion(Uint8List data) {
   var readBuffer = ReadBuffer(data.buffer.asByteData());
-  assert(readBuffer.getUint8() == 1);
+  if (readBuffer.getUint8() != 1) {
+    throw ArgumentError('format');
+  }
   var nameLength = readBuffer.getUint8();
   var name = String.fromCharCodes(readBuffer.getUint8List(nameLength));
   var versionLength = readBuffer.getUint8();
@@ -264,9 +266,15 @@ Uint8List makeBlock(Uint8List apdu) {
 
 Uint8List parseBlock(ByteData block) {
   var readBuffer = ReadBuffer(block);
-  assert(readBuffer.getUint16(endian: Endian.big) == channel);
-  assert(readBuffer.getUint8() == Tag);
-  assert(readBuffer.getUint16(endian: Endian.big) == 0);
+  if (readBuffer.getUint16(endian: Endian.big) != channel) {
+    throw ArgumentError('channel');
+  }
+  if (readBuffer.getUint8() != Tag) {
+    throw ArgumentError('Tag');
+  }
+  if (readBuffer.getUint16(endian: Endian.big) != 0) {
+    throw ArgumentError('blockSeqId');
+  }
 
   var dataLength = readBuffer.getUint16(endian: Endian.big);
   var data = readBuffer.getUint8List(dataLength);
